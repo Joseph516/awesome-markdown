@@ -144,7 +144,7 @@
     "vscode:prepublish": "npm run compile",
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
-    "package": "vsce package"
+    "package": "vsce package --out release"
   },
   "dependencies": {
     "vditor": "^3.10.0"

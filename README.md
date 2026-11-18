@@ -106,7 +106,7 @@ npm install
 npm run compile              # tsc 编译
 node scripts/render-test.mjs # Playwright 渲染/交互回归（浅色）
 AWESOME_THEME=dark node scripts/render-test.mjs  # 深色主题回归
-npm run package              # 生成 vsix
+npm run package              # 生成 vsix 到 release/
 ```
 
 调试：用 VS Code 打开本目录，按 `F5` 启动 Extension Development Host。
