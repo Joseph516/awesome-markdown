@@ -1,0 +1,313 @@
+/* ---------- 基础布局 ---------- */
+
+html,
+body {
+	height: 100%;
+	margin: 0;
+	padding: 0;
+	overflow: hidden;
+	/* 背景/前景按主题给不同的兜底色：未注入 VS Code 变量时也能正确显示 */
+	--aw-bg: var(--vscode-editor-background, #fff);
+	--aw-fg: var(--vscode-editor-foreground, #333333);
+	--aw-code-bg: var(--vscode-textCodeBlock-background, #f3f3f1);
+	background: var(--aw-bg);
+	color: var(--aw-fg);
+}
+
+body[data-theme="dark"] {
+	--aw-bg: var(--vscode-editor-background, #1e1e1e);
+	--aw-fg: var(--vscode-editor-foreground, #d4d4d4);
+	--aw-code-bg: var(--vscode-textCodeBlock-background, #262626);
+}
+
+#app {
+	height: 100%;
+}
+
+.vditor {
+	height: 100% !important;
+	border: 0 !important;
+	background: var(--aw-bg) !important;
+}
+
+.vditor-toolbar {
+	border-bottom: 1px solid var(--vscode-editorWidget-border, rgba(128, 128, 128, 0.25)) !important;
+	background: var(--aw-bg) !important;
+}
+
+.vditor-counter {
+	background: var(--aw-bg) !important;
+	color: var(--vscode-descriptionForeground, #888888) !important;
+	border-top: 1px solid var(--vscode-editorWidget-border, rgba(128, 128, 128, 0.25)) !important;
+}
+
+/* 内容区留白 + 限宽居中，接近 Typora 的阅读宽度 */
+.vditor-wysiwyg .vditor-reset,
+.vditor-ir .vditor-reset {
+	max-width: 920px;
+	margin-left: auto !important;
+	margin-right: auto !important;
+	padding: 28px clamp(20px, 6vw, 64px) 220px !important;
+	box-sizing: border-box;
+}
+
+/* 统一背景，避免正文块与编辑区出现「白色卡片」割裂感 */
+.vditor-content,
+.vditor-wysiwyg,
+.vditor-ir,
+.vditor-sv {
+	background: var(--aw-bg) !important;
+}
+
+.vditor-wysiwyg .vditor-reset,
+.vditor-ir .vditor-reset,
+.vditor-sv .vditor-reset {
+	background: transparent !important;
+}
+
+.vditor {
+	--panel-background-color: var(--vscode-editorWidget-background, #f3f3f3);
+}
+
+/* ---------- 右键菜单 ---------- */
+
+.aw-menu {
+	position: fixed;
+	z-index: 99999;
+	min-width: 200px;
+	max-height: min(72vh, calc(100vh - 16px));
+	overflow-y: auto;
+	overscroll-behavior: contain;
+	padding: 6px;
+	border-radius: 6px;
+	background: var(--vscode-menu-background, #f3f3f3);
+	color: var(--vscode-menu-foreground, #333333);
+	border: 1px solid var(--vscode-menu-border, rgba(128, 128, 128, 0.35));
+	box-shadow: 0 8px 24px rgba(0, 0, 0, 0.26);
+	font-family: var(--vscode-font-family, -apple-system, "PingFang SC", sans-serif);
+	font-size: 13px;
+	line-height: 1.4;
+	user-select: none;
+}
+
+/* 深色主题：VS Code 未注入菜单变量时的兜底色 */
+body[data-theme="dark"] .aw-menu {
+	background: var(--vscode-menu-background, #252526);
+	color: var(--vscode-menu-foreground, #cccccc);
+	border-color: var(--vscode-menu-border, #454545);
+}
+
+/* 菜单内容多时会出现滚动条，按 VS Code 主题着色 */.aw-menu::-webkit-scrollbar {
+	width: 10px;
+}
+
+.aw-menu::-webkit-scrollbar-track {
+	background: transparent;
+}
+
+.aw-menu::-webkit-scrollbar-thumb {
+	background: var(--vscode-scrollbarSlider-background, rgba(128, 128, 128, 0.55));
+	border-radius: 5px;
+	border: 2px solid transparent;
+	background-clip: padding-box;
+}
+
+.aw-menu-group {
+	padding: 6px 10px 4px;
+	font-size: 11px;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	opacity: 0.55;
+}
+
+.aw-menu-item {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 16px;
+	padding: 6px 10px;
+	border-radius: 4px;
+	cursor: pointer;
+	white-space: nowrap;
+}
+
+/* 菜单项左侧的图标 + 文字：图标沿用 Vditor 工具栏同一套，视觉上和顶部按钮对应 */
+.aw-menu-label {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	min-width: 0;
+}
+
+.aw-menu-icon {
+	flex: none;
+	width: 15px;
+	height: 15px;
+	opacity: 0.65;
+	fill: currentColor;
+}
+
+.aw-menu-icon--text {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 13px;
+	font-weight: 600;
+	line-height: 1;
+}
+
+.aw-menu-item:hover .aw-menu-icon,
+.aw-menu-item:focus-visible .aw-menu-icon {
+	opacity: 1;
+}
+
+.aw-menu-item:hover,
+.aw-menu-item:focus-visible {
+	background: var(--vscode-menu-selectionBackground, #0060c0);
+	color: var(--vscode-menu-selectionForeground, #ffffff);
+	outline: none;
+}
+
+.aw-menu-arrow {
+	opacity: 0.5;
+	font-size: 11px;
+}
+
+.aw-submenu {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+	margin: 2px 0 6px 10px;
+	padding: 4px 0 4px 8px;
+	border-left: 1px solid var(--vscode-menu-border, rgba(128, 128, 128, 0.35));
+}
+
+.aw-sub-item {
+	appearance: none;
+	border: 0;
+	background: transparent;
+	color: inherit;
+	font: inherit;
+	text-align: left;
+	padding: 5px 8px;
+	border-radius: 4px;
+	cursor: pointer;
+	white-space: nowrap;
+}
+
+.aw-sub-item:hover {
+	background: var(--vscode-menu-selectionBackground, #0060c0);
+	color: var(--vscode-menu-selectionForeground, #ffffff);
+}
+
+.aw-sub-custom {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	align-items: center;
+	margin-top: 4px;
+	padding: 8px 8px 2px;
+	border-top: 1px dashed var(--vscode-menu-border, rgba(128, 128, 128, 0.35));
+}
+
+.aw-sub-custom label {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+	font-size: 12px;
+	opacity: 0.85;
+}
+
+.aw-input {
+	width: 52px;
+	padding: 3px 6px;
+	border-radius: 3px;
+	border: 1px solid var(--vscode-input-border, rgba(128, 128, 128, 0.5));
+	background: var(--vscode-input-background, #ffffff);
+	color: var(--vscode-input-foreground, #333333);
+	font: inherit;
+	font-size: 12px;
+}
+
+.aw-sub-primary {
+	width: 100%;
+	margin-top: 2px;
+	padding: 5px 10px;
+	border-radius: 3px;
+	border: 1px solid transparent;
+	background: var(--vscode-button-background, #0e639c);
+	color: var(--vscode-button-foreground, #ffffff);
+	font: inherit;
+	font-size: 12px;
+	text-align: center;
+	cursor: pointer;
+}
+
+.aw-sub-primary:hover {
+	background: var(--vscode-button-hoverBackground, #1177bb);
+}
+
+/* ---------- 杂项 ---------- */
+
+.vditor-toolbar__item button {
+	color: var(--vscode-icon-foreground, inherit);
+}
+
+body[data-theme="dark"] .vditor-toolbar__item button {
+	filter: none;
+}
+
+/* ---------- 代码块：编辑时不再多出一块 ---------- */
+
+/*
+ * Vditor 的 wysiwyg 代码块由两层组成：
+ *   pre.vditor-wysiwyg__pre      → 可编辑的源码层（未编辑时 display:none）
+ *   pre.vditor-wysiwyg__preview  → 渲染层（行号 + 语法高亮）
+ * 默认点进去两层同时显示，看起来就像「又冒出一个相同的代码块」。
+ * 这里让渲染层继续撑出块高，源码层绝对定位铺满盖在上面：
+ * 未编辑时源码层是 display:none，只剩渲染层；点进去后同一位置直接变成可编辑代码块。
+ */
+.vditor-wysiwyg__block {
+	position: relative !important;
+}
+
+.vditor-wysiwyg__block > pre.vditor-wysiwyg__preview {
+	z-index: 1;
+	background: var(--aw-code-bg) !important;
+	border-radius: 4px;
+}
+
+.vditor-wysiwyg__block > pre.vditor-wysiwyg__pre {
+	position: absolute !important;
+	top: 0 !important;
+	left: 0 !important;
+	right: 0 !important;
+	bottom: 0 !important;
+	z-index: 3;
+	overflow: auto;
+	box-sizing: border-box;
+	border-radius: 4px;
+	padding: 12px 16px !important;
+	margin: 0 !important;
+	font-size: 13px !important;
+	line-height: 1.65 !important;
+	background: var(--aw-code-bg) !important;
+}
+
+/* 编辑层内部的 code 不要自带背景，否则代码块里会出现一块深浅不一的内框 */
+.vditor-wysiwyg__block > pre.vditor-wysiwyg__pre code {
+	background: transparent !important;
+	color: inherit !important;
+	font-family: inherit !important;
+	font-size: inherit !important;
+}
+
+/* 代码块顶部的操作条（上下移动/删除/语言）在深色主题下跟随主题 */
+body[data-theme="dark"] .vditor-panel,
+body[data-theme="dark"] .vditor-hint,
+body[data-theme="dark"] .vditor-input,
+body[data-theme="dark"] .vditor-panel input {
+	background: #2b2b2b !important;
+	color: #d4d4d4 !important;
+	border-color: #3c3c3c !important;
+}

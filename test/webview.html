@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<link rel="stylesheet" href="/node_modules/vditor/dist/index.css" />
+<link rel="stylesheet" href="/media/style.css" />
+</head>
+<body data-theme="dark">
+<div id="app"></div>
+<script>
+window.__AWESOME__ = {"cdn":"/node_modules/vditor","mode":"wysiwyg","showToolbar":true,"contextMenu":true,"theme":"dark"};
+window.__INITIAL__ = "# Awesome Markdown\n\n这是一个**所见即所得**的 Markdown 编辑器。\n\n- 直接在渲染结果上编辑\n- 右键插入段落、引用、表格\n\n> 引用块示例\n\n| 名字 | 说明 |\n| --- | --- |\n| 表格 | 已渲染 |\n\n```js\nconst hello = \"world\";\n```\n";
+window.__posted = [];
+window.acquireVsCodeApi = function () {
+	return {
+		postMessage: function (msg) {
+			window.__posted.push(msg);
+			if (msg.type === 'ready') {
+				setTimeout(function () {
+					window.postMessage({ type: 'init', value: window.__INITIAL__, theme: 'dark' }, '*');
+				}, 0);
+			}
+		},
+		setState: function () {},
+		getState: function () { return {}; }
+	};
+};
+</script>
+<script src="/node_modules/vditor/dist/index.min.js"></script>
+<script src="/media/main.js"></script>
+</body>
+</html>

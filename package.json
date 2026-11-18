@@ -1,0 +1,134 @@
+{
+  "name": "awesome-markdown",
+  "displayName": "Awesome Markdown",
+  "description": "像 Typora 一样直接在渲染后的 Markdown 上编辑，支持右键插入段落/引用/表格等块",
+  "version": "0.1.0",
+  "publisher": "huangyuhang",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Joseph516/awesome-markdown.git"
+  },
+  "icon": "media/icon.png",
+  "license": "MIT",
+  "engines": {
+    "vscode": "^1.84.0"
+  },
+  "categories": [
+    "Other",
+    "Formatters"
+  ],
+  "keywords": [
+    "markdown",
+    "wysiwyg",
+    "typora",
+    "editor",
+    "preview"
+  ],
+  "main": "./out/extension.js",
+  "activationEvents": [
+    "onCustomEditor:awesomeMarkdown.editor"
+  ],
+  "contributes": {
+    "customEditors": [
+      {
+        "viewType": "awesomeMarkdown.editor",
+        "displayName": "Awesome Markdown",
+        "selector": [
+          {
+            "filenamePattern": "*.md"
+          },
+          {
+            "filenamePattern": "*.markdown"
+          }
+        ],
+        "priority": "default"
+      }
+    ],
+    "commands": [
+      {
+        "command": "awesomeMarkdown.openVisual",
+        "title": "Awesome Markdown",
+        "shortTitle": "Awesome Markdown",
+        "icon": {
+          "light": "media/icons/aw-visual-light.svg",
+          "dark": "media/icons/aw-visual-dark.svg"
+        }
+      },
+      {
+        "command": "awesomeMarkdown.openSource",
+        "title": "Text Editor",
+        "category": "Awesome Markdown"
+      }
+    ],
+    "menus": {
+      "editor/title": [
+        {
+          "command": "awesomeMarkdown.openSource",
+          "when": "activeCustomEditorId == 'awesomeMarkdown.editor'",
+          "group": "navigation@1"
+        },
+        {
+          "command": "awesomeMarkdown.openVisual",
+          "when": "resourceLangId == markdown && activeCustomEditorId != 'awesomeMarkdown.editor'",
+          "group": "navigation@1"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "Awesome Markdown",
+      "properties": {
+        "awesomeMarkdown.mode": {
+          "type": "string",
+          "enum": [
+            "wysiwyg",
+            "ir",
+            "sv"
+          ],
+          "enumDescriptions": [
+            "所见即所得：隐藏语法标记，直接在渲染结果上编辑（类似 Typora）",
+            "即时渲染：光标所在块显示源码，其余块渲染（类似 Obsidian Live Preview）",
+            "分屏预览：左侧源码，右侧渲染"
+          ],
+          "default": "wysiwyg",
+          "description": "编辑模式"
+        },
+        "awesomeMarkdown.showToolbar": {
+          "type": "boolean",
+          "default": true,
+          "description": "是否显示顶部工具栏"
+        },
+        "awesomeMarkdown.contextMenu": {
+          "type": "boolean",
+          "default": true,
+          "description": "是否启用右键块插入菜单（段落、引用、表格等）"
+        },
+        "awesomeMarkdown.taskListSort": {
+          "type": "boolean",
+          "default": true,
+          "description": "勾选任务列表项后，自动把已完成项移到此列表末尾（类似 macOS 备忘录）"
+        },
+        "awesomeMarkdown.followTheme": {
+          "type": "boolean",
+          "default": true,
+          "description": "跟随 VS Code 的明暗主题"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "package": "vsce package"
+  },
+  "dependencies": {
+    "vditor": "^3.10.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.0",
+    "@types/vscode": "^1.84.0",
+    "@vscode/vsce": "^2.32.0",
+    "playwright": "^1.65.1",
+    "typescript": "^5.5.0"
+  }
+}
