@@ -430,18 +430,26 @@
 
 	function pickHeading(heads, msg) {
 		function norm(value) {
-			return String(value || '').replace(/\s+/g, ' ').trim();
+			return String(value || '')
+				.replace(/\s+/g, ' ')
+				.replace(/[*_`~]/g, '')
+				.trim();
 		}
-		if (typeof msg.index === 'number' && heads[msg.index]) {
-			const candidate = heads[msg.index];
-			if (!msg.text || norm(candidate.textContent) === norm(msg.text)) {
-				return candidate;
+		const expectedTag = typeof msg.level === 'number' ? 'H' + msg.level : '';
+		const byIndex = typeof msg.index === 'number' ? heads[msg.index] : undefined;
+		// 序号是全文标题顺序，加上层级校验足够可靠；标题里带 ** 等标记时也照样能定位
+		if (byIndex && (!expectedTag || byIndex.tagName === expectedTag)) {
+			return byIndex;
+		}
+		if (msg.text) {
+			const matched = heads.filter(function (head) {
+				return norm(head.textContent) === norm(msg.text);
+			})[0];
+			if (matched) {
+				return matched;
 			}
 		}
-		const byText = heads.filter(function (head) {
-			return head.tagName === 'H' + msg.level && norm(head.textContent) === norm(msg.text);
-		})[0];
-		return byText || null;
+		return null;
 	}
 
 	/** 目标标题若被上层标题折叠了，先把那几层展开 */

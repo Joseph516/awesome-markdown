@@ -42,17 +42,17 @@ const folded = await page.evaluate(() => ({
 }));
 console.log('FOLDED:', JSON.stringify(folded));
 
-// 模拟大纲点击「配置」(index=2)
+// 模拟大纲点击「强调」（index=4，标题原文是 **强调**）
 await page.evaluate(() => {
-	window.postMessage({ type: 'reveal', index: 2, level: 3, text: '配置' }, '*');
+	window.postMessage({ type: 'reveal', index: 4, level: 2, text: '强调' }, '*');
 });
 await page.waitForTimeout(900);
 
 const result = await page.evaluate(() => {
 	const root = document.querySelector('.vditor-wysiwyg .vditor-reset');
 	const flashed = root.querySelector('.aw-reveal-flash');
-	const target = root.querySelector('h3');
-	const rect = target.getBoundingClientRect();
+	const target = Array.from(root.querySelectorAll('h1, h2, h3')).find(h => h.textContent.trim() === '强调');
+	const rect = target ? target.getBoundingClientRect() : { top: -1, bottom: -1 };
 	return {
 		hiddenAfter: root.querySelectorAll('.aw-fold-hidden').length,
 		stillFolded: root.querySelector('h1').classList.contains('aw-folded'),

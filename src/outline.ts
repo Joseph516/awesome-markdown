@@ -14,6 +14,22 @@ const HEADING_RE = /^(#{1,6})\s+(.+?)\s*#*\s*$/;
 const FENCE_RE = /^\s*(```|~~~)/;
 
 /**
+ * 去掉标题里的内联 Markdown 标记，让大纲显示的文本和渲染后的文字一致。
+ * 否则 `## **总览**` 在大纲里显示成带星号的原文，跳转时也和 DOM 的 textContent 对不上。
+ */
+export function stripInline(text: string): string {
+	return text
+		.replace(/!\[[^\]]*\]\([^)]*\)/g, '')
+		.replace(/\[([^\]]*)\]\([^)]*\)/g, '$1')
+		.replace(/`([^`]*)`/g, '$1')
+		.replace(/(\*\*|__)(.*?)\1/g, '$2')
+		.replace(/(\*|_)(.*?)\1/g, '$2')
+		.replace(/~~(.*?)~~/g, '$1')
+		.replace(/<[^>]+>/g, '')
+		.trim();
+}
+
+/**
  * 从 Markdown 文本里抽出标题树。
  * 跳过代码围栏内的内容，否则 ``` 里的 # 注释会被误认成标题。
  */
@@ -38,7 +54,7 @@ export function parseHeadings(markdown: string): HeadingNode[] {
 		}
 		flat.push({
 			level: match[1].length,
-			text: match[2].trim(),
+			text: stripInline(match[2].trim()),
 			line: i,
 			index: index,
 			children: [],
