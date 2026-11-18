@@ -311,3 +311,78 @@ body[data-theme="dark"] .vditor-panel input {
 	color: #d4d4d4 !important;
 	border-color: #3c3c3c !important;
 }
+
+/* ------------------------------------------------------------------ */
+/* 标题折叠                                                           */
+/* ------------------------------------------------------------------ */
+
+.aw-fold-hidden {
+	display: none !important;
+}
+
+/*
+ * Vditor 自己给标题写了 content:"H1" 的层级标记（选择器 .vditor-wysiwyg > .vditor-reset > h1::before），
+ * 这里用同级特异性把它改写成折叠三角。
+ * 用行内伪元素 + 负 margin 出血，位置由文字流决定，不依赖绝对定位基准，永远不会漂。
+ */
+:is(.vditor-wysiwyg, .vditor-ir) > .vditor-reset > h1::before,
+:is(.vditor-wysiwyg, .vditor-ir) > .vditor-reset > h2::before,
+:is(.vditor-wysiwyg, .vditor-ir) > .vditor-reset > h3::before,
+:is(.vditor-wysiwyg, .vditor-ir) > .vditor-reset > h4::before,
+:is(.vditor-wysiwyg, .vditor-ir) > .vditor-reset > h5::before,
+:is(.vditor-wysiwyg, .vditor-ir) > .vditor-reset > h6::before {
+	content: '▾' !important;
+	display: inline-block !important;
+	position: static !important;
+	width: 16px !important;
+	height: 18px !important;
+	margin: 0 0 0 -16px !important;
+	padding: 0 !important;
+	border: 0 !important;
+	background: none !important;
+	box-shadow: none !important;
+	color: var(--aw-fg) !important;
+	font-size: 12px !important;
+	line-height: 18px !important;
+	font-weight: 400 !important;
+	text-align: center;
+	vertical-align: middle;
+	opacity: 0.28;
+	cursor: pointer;
+	transition: opacity 0.12s ease;
+}
+
+:is(.vditor-wysiwyg, .vditor-ir) > .vditor-reset > h1:hover::before,
+:is(.vditor-wysiwyg, .vditor-ir) > .vditor-reset > h2:hover::before,
+:is(.vditor-wysiwyg, .vditor-ir) > .vditor-reset > h3:hover::before,
+:is(.vditor-wysiwyg, .vditor-ir) > .vditor-reset > h4:hover::before,
+:is(.vditor-wysiwyg, .vditor-ir) > .vditor-reset > h5:hover::before,
+:is(.vditor-wysiwyg, .vditor-ir) > .vditor-reset > h6:hover::before {
+	opacity: 0.6;
+}
+
+:is(.vditor-wysiwyg, .vditor-ir) > .vditor-reset > h1.aw-folded::before,
+:is(.vditor-wysiwyg, .vditor-ir) > .vditor-reset > h2.aw-folded::before,
+:is(.vditor-wysiwyg, .vditor-ir) > .vditor-reset > h3.aw-folded::before,
+:is(.vditor-wysiwyg, .vditor-ir) > .vditor-reset > h4.aw-folded::before,
+:is(.vditor-wysiwyg, .vditor-ir) > .vditor-reset > h5.aw-folded::before,
+:is(.vditor-wysiwyg, .vditor-ir) > .vditor-reset > h6.aw-folded::before {
+	content: '▸' !important;
+	opacity: 0.6;
+}
+
+/* 大纲跳转后的短暂高亮，让视线知道落点在哪 */
+.vditor-reset > h1.aw-reveal-flash,
+.vditor-reset > h2.aw-reveal-flash,
+.vditor-reset > h3.aw-reveal-flash,
+.vditor-reset > h4.aw-reveal-flash,
+.vditor-reset > h5.aw-reveal-flash,
+.vditor-reset > h6.aw-reveal-flash {
+	animation: aw-reveal-flash 1.1s ease;
+}
+
+@keyframes aw-reveal-flash {
+	0% { background-color: rgba(255, 196, 0, 0.3); }
+	60% { background-color: rgba(255, 196, 0, 0.16); }
+	100% { background-color: transparent; }
+}

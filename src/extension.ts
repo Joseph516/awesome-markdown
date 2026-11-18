@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import { AwesomeMarkdownEditorProvider } from './markdownEditorProvider';
+import { OutlineTreeProvider, activeVisualUri } from './outline';
 
 export function activate(context: vscode.ExtensionContext): void {
 	const provider = new AwesomeMarkdownEditorProvider(context);
@@ -11,6 +12,32 @@ export function activate(context: vscode.ExtensionContext): void {
 			{
 				webviewOptions: { retainContextWhenHidden: true },
 				supportsMultipleEditorsPerDocument: false,
+			},
+		),
+	);
+
+	/*
+	 * VS Code 原生 Outline 绑定在文本编辑器上，自定义编辑器打开时它拿不到 symbol，
+	 * 所以这里自带一个大纲视图：解析标题树，点击后让 webview 内部滚动定位。
+	 */
+	const outline = new OutlineTreeProvider(context);
+	const treeView = vscode.window.createTreeView('awesomeMarkdown.outline', {
+		treeDataProvider: outline,
+		showCollapseAll: true,
+	});
+	context.subscriptions.push(treeView);
+	void outline.refresh();
+
+	context.subscriptions.push(
+		vscode.commands.registerCommand(
+			'awesomeMarkdown.revealHeading',
+			(index: number, level: number, text: string) => {
+				const uri = activeVisualUri();
+				if (!uri) {
+					return;
+				}
+				const webview = provider.getWebview(uri);
+				void webview?.postMessage({ type: 'reveal', index, level, text });
 			},
 		),
 	);

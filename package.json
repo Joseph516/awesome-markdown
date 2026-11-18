@@ -2,7 +2,7 @@
   "name": "awesome-markdown",
   "displayName": "Awesome Markdown",
   "description": "像 Typora 一样直接在渲染后的 Markdown 上编辑，支持右键插入段落/引用/表格等块",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "publisher": "huangyuhang",
   "repository": {
     "type": "git",
@@ -58,9 +58,20 @@
         "command": "awesomeMarkdown.openSource",
         "title": "Text Editor",
         "category": "Awesome Markdown"
+      },
+      {
+        "command": "awesomeMarkdown.revealHeading",
+        "title": "跳转到标题",
+        "category": "Awesome Markdown"
       }
     ],
     "menus": {
+      "commandPalette": [
+        {
+          "command": "awesomeMarkdown.revealHeading",
+          "when": "false"
+        }
+      ],
       "editor/title": [
         {
           "command": "awesomeMarkdown.openSource",
@@ -71,6 +82,15 @@
           "command": "awesomeMarkdown.openVisual",
           "when": "resourceLangId == markdown && activeCustomEditorId != 'awesomeMarkdown.editor'",
           "group": "navigation@1"
+        }
+      ]
+    },
+    "views": {
+      "explorer": [
+        {
+          "id": "awesomeMarkdown.outline",
+          "name": "Awesome Markdown 大纲",
+          "when": "activeCustomEditorId == 'awesomeMarkdown.editor'"
         }
       ]
     },
@@ -106,6 +126,11 @@
           "type": "boolean",
           "default": true,
           "description": "勾选任务列表项后，自动把已完成项移到此列表末尾（类似 macOS 备忘录）"
+        },
+        "awesomeMarkdown.headingFold": {
+          "type": "boolean",
+          "default": true,
+          "description": "点击标题左侧三角，折叠该标题下的内容（只影响显示，不改动 Markdown 源）"
         },
         "awesomeMarkdown.followTheme": {
           "type": "boolean",

@@ -219,6 +219,7 @@
 		after: () => {
 			state.vditor = vditor;
 			localizeToolbar();
+			setupHeadingFold();
 			report('info', 'webview ready (mode=' + (cfg.mode || 'wysiwyg') + ')');
 			vscode.postMessage({ type: 'ready' });
 		},
@@ -235,6 +236,7 @@
 				state.vditor.setValue(msg.value || '', true);
 				state.lastSent = msg.value || '';
 				state.suppress = false;
+				window.setTimeout(restoreFolds, 30);
 				if (msg.theme) {
 					applyTheme(msg.theme);
 				}
@@ -250,6 +252,9 @@
 				break;
 			case 'theme':
 				applyTheme(msg.theme);
+				break;
+			case 'reveal':
+				revealHeading(msg);
 				break;
 			default:
 				break;
@@ -290,6 +295,172 @@
 			});
 		}
 	}, true);
+
+	/* ------------------------------------------------------------------ */
+	/* 标题折叠：点标题左侧三角，收起该标题管辖的后续块                   */
+	/* ------------------------------------------------------------------ */
+
+	const FOLD_HEAD = /^H[1-6]$/;
+	/** 折叠状态按「级别 + 标题文本」记录，DOM 重建后据此恢复 */
+	const foldState = new Map();
+	let foldTimer = 0;
+
+	function foldKey(head) {
+		return head.tagName + ':' + String(head.textContent || '').replace(/\s+/g, ' ').trim().slice(0, 48);
+	}
+
+	function foldRoots() {
+		return Array.prototype.slice.call(document.querySelectorAll(EDITOR_ROOTS));
+	}
+
+	/** 标题管辖范围：从标题往下，直到同级或更高级标题为止 */
+	function headingScope(head) {
+		const level = Number(head.tagName.slice(1));
+		const blocks = [];
+		let node = head.nextElementSibling;
+		while (node) {
+			const match = FOLD_HEAD.exec(node.tagName);
+			if (match && Number(match[1]) <= level) {
+				break;
+			}
+			blocks.push(node);
+			node = node.nextElementSibling;
+		}
+		return blocks;
+	}
+
+	function applyFold(head, folded) {
+		headingScope(head).forEach(function (block) {
+			block.classList.toggle('aw-fold-hidden', folded);
+		});
+		head.classList.toggle('aw-folded', folded);
+		head.setAttribute('aria-expanded', folded ? 'false' : 'true');
+	}
+
+	/** setValue 重建 DOM 之后，把之前的折叠状态重新贴回标题 */
+	function restoreFolds() {
+		foldRoots().forEach(function (root) {
+			Array.prototype.forEach.call(root.querySelectorAll('h1, h2, h3, h4, h5, h6'), function (head) {
+				if (foldState.get(foldKey(head))) {
+					applyFold(head, true);
+				}
+			});
+		});
+	}
+
+	function toggleFold(head) {
+		const folded = !head.classList.contains('aw-folded');
+		if (folded) {
+			foldState.set(foldKey(head), true);
+		} else {
+			foldState.delete(foldKey(head));
+		}
+		applyFold(head, folded);
+	}
+
+	/** 命中标题左侧 20px 的竖条热区（折叠三角正好覆盖这段） */
+	function headingAtHotspot(x, y) {
+		const heads = document.querySelectorAll('h1, h2, h3, h4, h5, h6');
+		for (let i = 0; i < heads.length; i += 1) {
+			const head = heads[i];
+			if (!head.closest(EDITOR_ROOTS)) {
+				continue;
+			}
+			const rect = head.getBoundingClientRect();
+			// 热区就是三角本身（标题左边界外 18px ~ 2px，三角占 13px 中心）
+			if (y >= rect.top && y <= rect.bottom && x >= rect.left - 18 && x <= rect.left - 2) {
+				return head;
+			}
+		}
+		return null;
+	}
+
+	function setupHeadingFold() {
+		if (cfg.headingFold === false) {
+			return;
+		}
+		document.addEventListener(
+			'click',
+			function (event) {
+				const head = headingAtHotspot(event.clientX, event.clientY);
+				if (!head) {
+					return;
+				}
+				event.preventDefault();
+				event.stopPropagation();
+				toggleFold(head);
+			},
+			true,
+		);
+		// 折叠区上方继续输入时，新增的块也要跟着收起，避免"半折叠"
+		document.addEventListener('input', function () {
+			window.clearTimeout(foldTimer);
+			foldTimer = window.setTimeout(function () {
+				foldRoots().forEach(function (root) {
+					Array.prototype.forEach.call(root.querySelectorAll('h1, h2, h3, h4, h5, h6'), function (head) {
+						if (head.classList.contains('aw-folded')) {
+							applyFold(head, true);
+						}
+					});
+				});
+			}, 150);
+		});
+	}
+
+	/** 大纲点某条标题时，在编辑器里定位到它 */
+	function revealHeading(msg) {
+		const root =
+			document.querySelector('.vditor-wysiwyg .vditor-reset') ||
+			document.querySelector('.vditor-ir .vditor-reset');
+		if (!root) {
+			return;
+		}
+		const heads = Array.prototype.slice.call(root.querySelectorAll('h1, h2, h3, h4, h5, h6'));
+		const target = pickHeading(heads, msg);
+		if (!target) {
+			return;
+		}
+		unfoldHeadingChain(heads, target);
+		target.scrollIntoView({ block: 'center', behavior: 'smooth' });
+		target.classList.add('aw-reveal-flash');
+		window.setTimeout(function () {
+			target.classList.remove('aw-reveal-flash');
+		}, 1200);
+	}
+
+	function pickHeading(heads, msg) {
+		function norm(value) {
+			return String(value || '').replace(/\s+/g, ' ').trim();
+		}
+		if (typeof msg.index === 'number' && heads[msg.index]) {
+			const candidate = heads[msg.index];
+			if (!msg.text || norm(candidate.textContent) === norm(msg.text)) {
+				return candidate;
+			}
+		}
+		const byText = heads.filter(function (head) {
+			return head.tagName === 'H' + msg.level && norm(head.textContent) === norm(msg.text);
+		})[0];
+		return byText || null;
+	}
+
+	/** 目标标题若被上层标题折叠了，先把那几层展开 */
+	function unfoldHeadingChain(heads, target) {
+		const level = Number(target.tagName.slice(1));
+		heads.forEach(function (head) {
+			if (head === target || !head.classList.contains('aw-folded')) {
+				return;
+			}
+			if (!(head.compareDocumentPosition(target) & Node.DOCUMENT_POSITION_FOLLOWING)) {
+				return;
+			}
+			if (Number(head.tagName.slice(1)) >= level) {
+				return;
+			}
+			foldState.delete(foldKey(head));
+			applyFold(head, false);
+		});
+	}
 
 	/* ------------------------------------------------------------------ */
 	/* 右键菜单                                                           */

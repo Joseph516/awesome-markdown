@@ -26,8 +26,15 @@ export class AwesomeMarkdownEditorProvider implements vscode.CustomTextEditorPro
 
 	private statusBarUsers = 0;
 
+	/** 正在打开的可视化编辑器面板，按文档 URI 索引，供大纲视图投递跳转消息 */
+	private readonly webviews = new Map<string, vscode.Webview>();
+
 	constructor(private readonly context: vscode.ExtensionContext) {
 		this.channel = vscode.window.createOutputChannel('Awesome Markdown', { log: true });
+	}
+
+	public getWebview(uri: vscode.Uri): vscode.Webview | undefined {
+		return this.webviews.get(uri.toString());
 	}
 
 	private acquireStatusBar(): vscode.StatusBarItem {
@@ -64,6 +71,7 @@ export class AwesomeMarkdownEditorProvider implements vscode.CustomTextEditorPro
 	): void {
 		const extensionUri = this.context.extensionUri;
 		const webview = panel.webview;
+		this.webviews.set(document.uri.toString(), webview);
 		this.channel.info(`open visual editor: ${document.uri.fsPath}`);
 		const statusBar = this.acquireStatusBar();
 		statusBar.show();
@@ -183,6 +191,7 @@ export class AwesomeMarkdownEditorProvider implements vscode.CustomTextEditorPro
 			documentSub.dispose();
 			themeSub.dispose();
 			saveSub.dispose();
+			this.webviews.delete(document.uri.toString());
 			this.releaseStatusBar();
 		});
 	}
@@ -219,6 +228,7 @@ export class AwesomeMarkdownEditorProvider implements vscode.CustomTextEditorPro
 		const showToolbar = config.get<boolean>('showToolbar', true);
 		const contextMenu = config.get<boolean>('contextMenu', true);
 		const taskListSort = config.get<boolean>('taskListSort', true);
+		const headingFold = config.get<boolean>('headingFold', true);
 		const theme = this.currentTheme();
 
 		const nonce = getNonce();
@@ -238,6 +248,7 @@ export class AwesomeMarkdownEditorProvider implements vscode.CustomTextEditorPro
 			showToolbar,
 			contextMenu,
 			taskListSort,
+			headingFold,
 			theme,
 			fileName: document.uri.path.split('/').pop() ?? '',
 		}).replace(/</g, '\\u003c');

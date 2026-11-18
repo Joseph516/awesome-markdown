@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<link rel="stylesheet" href="/node_modules/vditor/dist/index.css" />
+<link rel="stylesheet" href="/media/style.css" />
+</head>
+<body>
+<script>
+var awTheme = new URLSearchParams(location.search).get('theme') === 'dark' ? 'dark' : 'classic';
+window.__AWESOME__ = {"cdn":"/node_modules/vditor","mode":"wysiwyg","showToolbar":true,"contextMenu":true,"taskListSort":true,"inheadingFold":true,"headingFold":true,"theme":awTheme};
+window.__INITIAL__ = "# 总览\n\n这是总览段落，用来占位。\n\n## 安装\n\n安装说明段落。\n\n### 配置\n\n配置说明段落。\n\n## 使用\n\n使用说明段落。\n\n## 常见问题\n\n问题一的回答。\n";
+window.__posted = [];
+window.acquireVsCodeApi = function () {
+	return {
+		postMessage: function (msg) {
+			window.__posted.push(msg);
+			if (msg.type === 'ready') {
+				setTimeout(function () {
+					window.postMessage({ type: 'init', value: window.__INITIAL__, theme: awTheme }, '*');
+				}, 0);
+			}
+		},
+		setState: function () {},
+		getState: function () { return {}; }
+	};
+};
+</script>
+<div id="app"></div>
+<script src="/node_modules/vditor/dist/index.min.js"></script>
+<script src="/media/main.js"></script>
+</body>
+</html>
