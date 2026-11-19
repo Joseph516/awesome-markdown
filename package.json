@@ -2,7 +2,7 @@
   "name": "awesome-markdown",
   "displayName": "Awesome Markdown",
   "description": "像 Typora 一样直接在渲染后的 Markdown 上编辑，支持右键插入段落/引用/表格等块",
-  "version": "0.1.7",
+  "version": "0.1.8",
   "publisher": "huangyuhang",
   "repository": {
     "type": "git",

@@ -187,6 +187,34 @@
 				if (!list || list.tagName !== 'UL') {
 					return;
 				}
+				// 项首回车自己处理：交给 Vditor 会把复选框和文字拆成两块
+				const selection = window.getSelection();
+				if (selection && selection.rangeCount) {
+					const range = selection.getRangeAt(0);
+					const pre = document.createRange();
+					pre.setStart(item, 0);
+					pre.setEnd(range.startContainer, range.startOffset);
+					if (!pre.toString().replace(/\u200b/g, '').trim()) {
+						event.preventDefault();
+						event.stopPropagation();
+						const blank = document.createElement('li');
+						// 任务项在 Vditor 里靠 class 和 data-marker 变成复选框样式，缺了会多出一个圆点
+						blank.className = 'vditor-task';
+						blank.setAttribute('data-marker', item.getAttribute('data-marker') || '-');
+						const box = document.createElement('input');
+						box.type = 'checkbox';
+						blank.appendChild(box);
+						blank.appendChild(document.createTextNode(' '));
+						list.insertBefore(blank, item);
+						const caret = document.createRange();
+						caret.setStart(blank.lastChild, 0);
+						caret.collapse(true);
+						selection.removeAllRanges();
+						selection.addRange(caret);
+						syncNow();
+						return;
+					}
+				}
 				const snapshot = Array.prototype.slice.call(list.children).map(function (li) {
 					const box = li.querySelector('input[type=checkbox]');
 					return {
