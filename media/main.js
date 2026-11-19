@@ -315,16 +315,21 @@
 
 	/** 标题管辖范围：从标题往下，直到同级或更高级标题为止 */
 	function headingScope(head) {
-		const level = Number(head.tagName.slice(1));
+		const level = Number(String(head.tagName).slice(1));
+		const parent = head.parentElement;
+		if (!parent) {
+			return [];
+		}
+		const children = Array.prototype.slice.call(parent.children);
+		const start = children.indexOf(head);
 		const blocks = [];
-		let node = head.nextElementSibling;
-		while (node) {
-			const match = FOLD_HEAD.exec(node.tagName);
-			if (match && Number(match[1]) <= level) {
+		for (let i = start + 1; i < children.length; i += 1) {
+			const el = children[i];
+			const match = /^H([1-6])$/.exec(String(el.tagName).toUpperCase());
+			if (match && parseInt(match[1], 10) <= level) {
 				break;
 			}
-			blocks.push(node);
-			node = node.nextElementSibling;
+			blocks.push(el);
 		}
 		return blocks;
 	}
