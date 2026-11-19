@@ -19,6 +19,8 @@ const port = server.address().port;
 
 const browser = await chromium.launch();
 const page = await browser.newPage({ viewport: { width: 1000, height: 700 } });
+page.on('pageerror', (e) => console.log('PAGEERROR:', e.message));
+page.on('console', (m) => console.log('CONSOLE', m.type(), m.text()));
 await page.goto(`http://127.0.0.1:${port}/test/harness-enter.html`, { waitUntil: 'domcontentloaded' });
 await page.waitForSelector('.vditor-wysiwyg .vditor-reset ul li', { timeout: 20000 });
 await page.waitForTimeout(600);
@@ -48,6 +50,11 @@ const focus = await page.evaluate(() => ({
 }));
 console.log('FOCUS:', JSON.stringify(focus));
 
+await page.evaluate(() => {
+	const el = document.querySelector('.vditor-wysiwyg .vditor-reset');
+	el.addEventListener('keydown', (e) => console.log('KEYDOWN', e.key, e.keyCode, e.target.tagName));
+	document.addEventListener('keydown', (e) => console.log('DOC KEYDOWN', e.key), true);
+});
 await page.keyboard.press('Home');
 await page.keyboard.press('Enter');
 await page.waitForTimeout(400);

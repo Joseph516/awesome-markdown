@@ -139,8 +139,32 @@
 		});
 	}
 
+	/** 从节点往上找任务列表项（li 内必须带复选框） */
+	function taskItemFromNode(node) {
+		if (!node) {
+			return null;
+		}
+		const el = node.nodeType === 3 ? node.parentElement : node;
+		if (!el || !el.closest) {
+			return null;
+		}
+		const item = el.closest('li');
+		if (!item || !item.querySelector('input[type=checkbox]')) {
+			return null;
+		}
+		return item;
+	}
+
+	let currentTaskItem = null;
+
 	/** 回车前记下每一项的文本与勾选状态，回车后 60ms 把新项和原项的状态摆正 */
 	function guardTaskListEnter() {
+		// 光标在编辑器里时 focus 始终落在整个编辑区，只能靠选区判断处于哪个任务项
+		document.addEventListener('selectionchange', function () {
+			const sel = window.getSelection();
+			currentTaskItem = sel && sel.rangeCount ? taskItemFromNode(sel.getRangeAt(0).startContainer) : null;
+		});
+
 		document.addEventListener(
 			'keydown',
 			function (event) {
@@ -153,12 +177,10 @@
 				) {
 					return;
 				}
-				const node = event.target;
-				if (!node || !node.closest) {
-					return;
-				}
-				const item = node.closest('li');
-				if (!item || !item.querySelector('input[type=checkbox]')) {
+				const sel = window.getSelection();
+				const live = sel && sel.rangeCount ? taskItemFromNode(sel.getRangeAt(0).startContainer) : null;
+				const item = live || (currentTaskItem && currentTaskItem.isConnected ? currentTaskItem : null);
+				if (!item) {
 					return;
 				}
 				const list = item.parentElement;
@@ -176,7 +198,7 @@
 				});
 				window.setTimeout(function () {
 					normalizeNewTaskItems(list, snapshot);
-				syncNow();
+					syncNow();
 				}, 60);
 			},
 			true,
