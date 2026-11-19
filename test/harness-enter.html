@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<link rel="stylesheet" href="/node_modules/vditor/dist/index.css" />
+<link rel="stylesheet" href="/media/style.css" />
+</head>
+<body>
+<script>
+window.__AWESOME__ = {"cdn":"/node_modules/vditor","mode":"wysiwyg","showToolbar":false,"contextMenu":false,"taskListSort":false,"headingFold":false,"theme":"classic"};
+window.__INITIAL__ = "1. 第一项\n2. 第二项\n3. 第三项\n\n- [ ] 任务一\n- [ ] 任务二\n";
+window.__posted = [];
+window.acquireVsCodeApi = function () {
+	return {
+		postMessage: function (msg) {
+			window.__posted.push(msg);
+			if (msg.type === 'ready') {
+				setTimeout(function () {
+					window.postMessage({ type: 'init', value: window.__INITIAL__, theme: 'classic' }, '*');
+				}, 0);
+			}
+		},
+		setState: function () {},
+		getState: function () { return {}; }
+	};
+};
+</script>
+<div id="app"></div>
+<script src="/node_modules/vditor/dist/index.min.js"></script>
+<script src="/media/main.js"></script>
+</body>
+</html>

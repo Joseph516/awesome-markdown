@@ -104,6 +104,66 @@
 		return true;
 	}
 
+	/**
+	 * 任务列表里回车会生成新项，Vditor 可能把 checked 状态一起复制过去（新行就成了"已完成"的空项），
+	 * 极端情况下还会给出一个没有复选框的普通项。这里把新项修正一遍：
+	 * 空的新项必须未勾选且带复选框，否则 - [ ] 标记就丢了。
+	 */
+	function normalizeNewTaskItems(list, before) {
+		Array.prototype.slice.call(list.children).forEach(function (item) {
+			if (before.has(item)) {
+				return;
+			}
+			const empty = !String(item.textContent || '').replace(/\u200b/g, '').trim();
+			let box = item.querySelector('input[type=checkbox]');
+			if (!box && empty) {
+				box = document.createElement('input');
+				box.type = 'checkbox';
+				item.insertBefore(box, item.firstChild);
+				item.insertBefore(document.createTextNode(' '), box.nextSibling);
+			}
+			if (box && empty && box.checked) {
+				box.checked = false;
+				box.removeAttribute('checked');
+			}
+		});
+	}
+
+	/** 回车前记下任务列表的现有项，回车后 60ms 把新增项规范化 */
+	function guardTaskListEnter() {
+		document.addEventListener(
+			'keydown',
+			function (event) {
+				if (
+					event.key !== 'Enter' ||
+					event.shiftKey ||
+					event.ctrlKey ||
+					event.metaKey ||
+					event.isComposing
+				) {
+					return;
+				}
+				const node = event.target;
+				if (!node || !node.closest) {
+					return;
+				}
+				const item = node.closest('li');
+				if (!item || !item.querySelector('input[type=checkbox]')) {
+					return;
+				}
+				const list = item.parentElement;
+				if (!list || list.tagName !== 'UL') {
+					return;
+				}
+				const before = new Set(Array.prototype.slice.call(list.children));
+				window.setTimeout(function () {
+					normalizeNewTaskItems(list, before);
+				}, 60);
+			},
+			true,
+		);
+	}
+
 	document.addEventListener('change', function (event) {
 		if (cfg.taskListSort === false) {
 			return;
@@ -220,6 +280,8 @@
 			state.vditor = vditor;
 			localizeToolbar();
 			setupHeadingFold();
+			guardTaskListEnter();
+			window.__awNormalizeNewTaskItems = normalizeNewTaskItems;
 			report('info', 'webview ready (mode=' + (cfg.mode || 'wysiwyg') + ')');
 			vscode.postMessage({ type: 'ready' });
 		},
