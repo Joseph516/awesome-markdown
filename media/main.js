@@ -105,31 +105,41 @@
 	}
 
 	/**
-	 * 任务列表里回车会生成新项，Vditor 可能把 checked 状态一起复制过去（新行就成了"已完成"的空项），
-	 * 极端情况下还会给出一个没有复选框的普通项。这里把新项修正一遍：
-	 * 空的新项必须未勾选且带复选框，否则 - [ ] 标记就丢了。
+	 * 任务列表回车时 Vditor 会把新行插到上面，并把勾选状态一起带过去，
+	 * 原来那一项反而被重置成未勾选。这里回车后把状态摆回原位：
+	 * 空的新项一律未勾选，原来的项按文本找回自己的勾选状态。
 	 */
-	function normalizeNewTaskItems(list, before) {
+	function normalizeNewTaskItems(list, snapshot) {
 		Array.prototype.slice.call(list.children).forEach(function (item) {
-			if (before.has(item)) {
-				return;
-			}
-			const empty = !String(item.textContent || '').replace(/\u200b/g, '').trim();
 			let box = item.querySelector('input[type=checkbox]');
-			if (!box && empty) {
+			const text = String(item.textContent || '')
+				.replace(/\u200b/g, '')
+				.trim();
+			if (!box && !text) {
 				box = document.createElement('input');
 				box.type = 'checkbox';
 				item.insertBefore(box, item.firstChild);
 				item.insertBefore(document.createTextNode(' '), box.nextSibling);
 			}
-			if (box && empty && box.checked) {
+			if (!box) {
+				return;
+			}
+			if (!text) {
 				box.checked = false;
 				box.removeAttribute('checked');
+				return;
+			}
+			for (let i = 0; i < snapshot.length; i += 1) {
+				if (snapshot[i].text === text && snapshot[i].checked && !box.checked) {
+					box.checked = true;
+					box.setAttribute('checked', '');
+					break;
+				}
 			}
 		});
 	}
 
-	/** 回车前记下任务列表的现有项，回车后 60ms 把新增项规范化 */
+	/** 回车前记下每一项的文本与勾选状态，回车后 60ms 把新项和原项的状态摆正 */
 	function guardTaskListEnter() {
 		document.addEventListener(
 			'keydown',
@@ -155,9 +165,18 @@
 				if (!list || list.tagName !== 'UL') {
 					return;
 				}
-				const before = new Set(Array.prototype.slice.call(list.children));
+				const snapshot = Array.prototype.slice.call(list.children).map(function (li) {
+					const box = li.querySelector('input[type=checkbox]');
+					return {
+						text: String(li.textContent || '')
+							.replace(/\u200b/g, '')
+							.trim(),
+						checked: box ? box.checked : false,
+					};
+				});
 				window.setTimeout(function () {
-					normalizeNewTaskItems(list, before);
+					normalizeNewTaskItems(list, snapshot);
+				syncNow();
 				}, 60);
 			},
 			true,

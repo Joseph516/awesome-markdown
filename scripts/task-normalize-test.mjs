@@ -23,21 +23,21 @@ await page.goto(`http://127.0.0.1:${port}/test/harness-enter.html`, { waitUntil:
 await page.waitForSelector('.vditor-wysiwyg .vditor-reset ul li', { timeout: 20000 });
 await page.waitForTimeout(700);
 
+// 构造“回车之后”的现场：空项把勾选状态抢走了，原已完成项被重置为未勾选
 const result = await page.evaluate(() => {
 	const root = document.querySelector('.vditor-wysiwyg .vditor-reset');
 	const ul = root.querySelector('ul');
-	const before = new Set(Array.from(ul.children));
+	ul.innerHTML =
+		'<li><input type="checkbox" checked> </li>' +
+		'<li><input type="checkbox"> 任务A</li>' +
+		'<li><input type="checkbox"> 任务B</li>';
 
-	// 模拟两种“回车后新增项”：复制了 checked 的空项、完全没有复选框的空项
-	const checkedEmpty = document.createElement('li');
-	checkedEmpty.innerHTML = '<input type="checkbox" checked> ';
-	ul.appendChild(checkedEmpty);
+	const snapshot = [
+		{ text: '任务A', checked: true },
+		{ text: '任务B', checked: false },
+	];
 
-	const bareEmpty = document.createElement('li');
-	bareEmpty.textContent = '\u200b';
-	ul.appendChild(bareEmpty);
-
-	window.__awNormalizeNewTaskItems(ul, before);
+	window.__awNormalizeNewTaskItems(ul, snapshot);
 
 	return Array.from(ul.children).map((li) => {
 		const box = li.querySelector('input[type=checkbox]');
@@ -45,13 +45,7 @@ const result = await page.evaluate(() => {
 	});
 });
 
-console.log('NORMALIZED:', JSON.stringify(result));
-
-const md = await page.evaluate(() => {
-	const save = window.__posted.filter(m => m.type === 'save');
-	return save.length ? save[save.length - 1].value : '(no save)';
-});
-console.log('MD AFTER (should keep 4 items):', JSON.stringify(md));
+console.log('AFTER RESTORE:', JSON.stringify(result));
 
 await browser.close();
 server.close();
